@@ -39,22 +39,23 @@ const Sidebar = () => {
   const isActive = (path: string) => router.pathname === path;
 
   return (
-    <aside className="w-64 bg-white h-screen overflow-y-auto flex flex-col sticky top-0 sm:sticky sm:top-0">
-      {/* Logo */}
-      <div className="p-4 border-b">
-        <Link href="/" className="flex items-center">
-          <svg className="h-8 w-8 text-primary-600" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-          <span className="ml-2 text-xl font-semibold text-gray-900">VectorLogo</span>
-        </Link>
-      </div>
-
+    <aside className="w-64 bg-white h-full overflow-y-auto flex flex-col border-r border-gray-200">
       {/* Navigation Links */}
-      <nav className="p-4 flex-grow">
-        <ul className="space-y-2">
+      <nav className="flex-grow flex flex-col">
+        {/* Logo */}
+        <div className="p-4 border-b border-gray-200 sticky top-0 bg-white z-10 shadow-sm">
+          <Link href="/" className="flex items-center">
+            <svg className="h-8 w-8 text-primary-600" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            <span className="ml-2 text-xl font-semibold text-gray-900">VectorLogo</span>
+          </Link>
+        </div>
+        
+        <div className="p-4">
+          <ul className="space-y-2">
           <li>
             <Link 
               href="/" 
@@ -136,13 +137,26 @@ const Sidebar = () => {
               </ul>
             )}
           </li>
-        </ul>
+          </ul>
+        </div>
       </nav>
       
-      {/* Authentication Links - Moved to bottom */}
-      <div className="p-4 border-t border-gray-200 mt-auto">
-        {session ? (
+      {/* Admin Section - Only shown when logged in */}
+      {session && (
+        <div className="p-4 border-t border-gray-200 mt-auto sticky bottom-0 bg-white z-10 shadow-sm">
           <div className="space-y-2">
+            <Link 
+              href="/admin/logos" 
+              className={`flex items-center p-2 rounded-md ${
+                isActive('/admin/logos') 
+                  ? 'bg-primary-50 text-primary-600' 
+                  : 'text-gray-700 hover:bg-gray-100'
+              }`}
+            >
+              <UserIcon className="h-5 w-5 mr-3" />
+              <span>Admin Dashboard</span>
+            </Link>
+            
             <Link 
               href="/upload" 
               className={`flex items-center p-2 rounded-md ${
@@ -153,18 +167,6 @@ const Sidebar = () => {
             >
               <ArrowUpTrayIcon className="h-5 w-5 mr-3" />
               <span>Upload Logo</span>
-            </Link>
-            
-            <Link 
-              href="/profile" 
-              className={`flex items-center p-2 rounded-md ${
-                isActive('/profile') 
-                  ? 'bg-primary-50 text-primary-600' 
-                  : 'text-gray-700 hover:bg-gray-100'
-              }`}
-            >
-              <UserIcon className="h-5 w-5 mr-3" />
-              <span>My Profile</span>
             </Link>
             
             <button
@@ -178,34 +180,8 @@ const Sidebar = () => {
               <span>Sign Out</span>
             </button>
           </div>
-        ) : (
-          <div className="space-y-2">
-            <Link 
-              href="/auth/signin" 
-              className={`flex items-center p-2 rounded-md ${
-                isActive('/auth/signin') 
-                  ? 'bg-primary-50 text-primary-600' 
-                  : 'text-gray-700 hover:bg-gray-100'
-              }`}
-            >
-              <UserIcon className="h-5 w-5 mr-3" />
-              <span>Sign In</span>
-            </Link>
-            
-            <Link 
-              href="/auth/signup" 
-              className={`flex items-center p-2 rounded-md ${
-                isActive('/auth/signup') 
-                  ? 'bg-primary-50 text-primary-600' 
-                  : 'text-gray-700 hover:bg-gray-100'
-              }`}
-            >
-              <ArrowRightOnRectangleIcon className="h-5 w-5 mr-3" />
-              <span>Sign Up</span>
-            </Link>
-          </div>
-        )}
-      </div>
+        </div>
+      )}
     </aside>
   );
 };

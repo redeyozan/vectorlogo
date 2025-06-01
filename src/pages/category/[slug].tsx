@@ -2,156 +2,72 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import type { GetServerSideProps, NextPage } from 'next';
 import Layout from '@/components/Layout';
-import LogoCard from '@/components/LogoCard';
-import CategoryFilter from '@/components/CategoryFilter';
-import { Logo } from '@/components/LogoCard';
-import { supabase } from '@/lib/supabase';
+import Link from 'next/link';
+import { getLogosByCategory, Logo as LogoType } from '@/lib/logoService';
 
-// Sample data - in a real app, this would come from Supabase
-const SAMPLE_CATEGORIES = [
-  { id: '1', name: 'Technology', slug: 'technology' },
-  { id: '2', name: 'Finance', slug: 'finance' },
-  { id: '3', name: 'Healthcare', slug: 'healthcare' },
-  { id: '4', name: 'Retail', slug: 'retail' },
-  { id: '5', name: 'Entertainment', slug: 'entertainment' },
-  { id: '6', name: 'Social Media', slug: 'social-media' },
-];
+// Logo type for the frontend
+export type Logo = {
+  id: string;
+  name: string;
+  category: string;
+  categorySlug: string;
+  pngUrl: string;
+  svgUrl: string;
+};
 
-// Sample logos - in a real app, these would come from Supabase
-const SAMPLE_LOGOS: Logo[] = [
-  {
-    id: '1',
-    name: 'Google',
-    category: 'Technology',
-    categorySlug: 'technology',
-    pngUrl: 'https://via.placeholder.com/300',
-    svgUrl: 'https://via.placeholder.com/300',
-    featured: true,
-  },
-  {
-    id: '2',
-    name: 'Apple',
-    category: 'Technology',
-    categorySlug: 'technology',
-    pngUrl: 'https://via.placeholder.com/300',
-    svgUrl: 'https://via.placeholder.com/300',
-    featured: true,
-  },
-  {
-    id: '3',
-    name: 'Microsoft',
-    category: 'Technology',
-    categorySlug: 'technology',
-    pngUrl: 'https://via.placeholder.com/300',
-    svgUrl: 'https://via.placeholder.com/300',
-    featured: false,
-  },
-  {
-    id: '4',
-    name: 'Visa',
-    category: 'Finance',
-    categorySlug: 'finance',
-    pngUrl: 'https://via.placeholder.com/300',
-    svgUrl: 'https://via.placeholder.com/300',
-    featured: true,
-  },
-  {
-    id: '5',
-    name: 'Mastercard',
-    category: 'Finance',
-    categorySlug: 'finance',
-    pngUrl: 'https://via.placeholder.com/300',
-    svgUrl: 'https://via.placeholder.com/300',
-    featured: false,
-  },
-  {
-    id: '6',
-    name: 'Facebook',
-    category: 'Social Media',
-    categorySlug: 'social-media',
-    pngUrl: 'https://via.placeholder.com/300',
-    svgUrl: 'https://via.placeholder.com/300',
-    featured: true,
-  },
-];
+// Convert database logo to frontend logo format
+const convertLogoFormat = (dbLogo: LogoType): Logo => {
+  return {
+    id: dbLogo.id,
+    name: dbLogo.name,
+    category: dbLogo.category,
+    categorySlug: dbLogo.category.toLowerCase().replace(/\s+/g, '-'),
+    pngUrl: dbLogo.png_url || '/placeholder-logo.png',
+    svgUrl: dbLogo.svg_url || '/placeholder-logo.png'
+  };
+};
+
+
 
 type CategoryPageProps = {
   categorySlug: string;
+  initialLogos: Logo[];
+  categoryName: string;
 };
 
-const CategoryPage: NextPage<CategoryPageProps> = ({ categorySlug }) => {
+const CategoryPage: NextPage<CategoryPageProps> = ({ categorySlug, initialLogos, categoryName }) => {
   const router = useRouter();
-  const [logos, setLogos] = useState<Logo[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [category, setCategory] = useState<string | null>(null);
+  const [logos, setLogos] = useState<Logo[]>(initialLogos);
+  const [loading, setLoading] = useState(false);
+  const [category, setCategory] = useState<string>(categoryName);
 
   useEffect(() => {
-    // In a real app, you would fetch logos for this category from Supabase
-    setLoading(true);
-    
-    // Find the category name
-    const categoryObj = SAMPLE_CATEGORIES.find(cat => cat.slug === categorySlug);
-    if (categoryObj) {
-      setCategory(categoryObj.name);
-    }
-    
-    // Filter logos by category
-    const filteredLogos = SAMPLE_LOGOS.filter(logo => logo.categorySlug === categorySlug);
-    setLogos(filteredLogos);
-    setLoading(false);
-    
-    // Example of how you would fetch from Supabase:
-    // const fetchCategoryLogos = async () => {
-    //   try {
-    //     const { data: categoryData } = await supabase
-    //       .from('categories')
-    //       .select('*')
-    //       .eq('slug', categorySlug)
-    //       .single();
-    //
-    //     if (categoryData) {
-    //       setCategory(categoryData.name);
-    //       
-    //       const { data: logosData } = await supabase
-    //         .from('logos')
-    //         .select('*')
-    //         .eq('category_id', categoryData.id)
-    //         .order('name');
-    //
-    //       if (logosData) setLogos(logosData);
-    //     }
-    //   } catch (error) {
-    //     console.error('Error fetching category logos:', error);
-    //   } finally {
-    //     setLoading(false);
-    //   }
-    // };
-    //
-    // fetchCategoryLogos();
-  }, [categorySlug]);
+    // Update state when props change (e.g., when navigating between categories)
+    setLogos(initialLogos);
+    setCategory(categoryName);
+  }, [initialLogos, categoryName, categorySlug]);
 
   return (
-    <Layout title={`${category || categorySlug} Logos - VectorLogo`}>
-      {/* Category Header */}
-      <section className="mb-12">
-        <div className="max-w-4xl mx-auto text-center">
+    <Layout title={`${category} Logos - Vector Logos`}>
+      <div className="container mx-auto px-4 py-8">
+        {/* Category Header */}
+        <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-4">
-            {category || categorySlug.charAt(0).toUpperCase() + categorySlug.slice(1)} Logos
+            {category} Logos
           </h1>
           <p className="text-lg text-gray-600">
-            Download high-quality {category?.toLowerCase() || categorySlug} company logos in PNG and SVG formats.
+            Download high-quality {category.toLowerCase()} company logos in PNG and SVG formats.
           </p>
         </div>
-      </section>
 
-      {/* Category Filter */}
-      <CategoryFilter 
-        categories={SAMPLE_CATEGORIES} 
-        selectedCategory={categorySlug} 
-      />
+        {/* Back to all logos */}
+        <div className="mb-6">
+          <Link href="/" className="text-primary-600 hover:text-primary-700">
+            &larr; Back to all logos
+          </Link>
+        </div>
 
-      {/* Logos Grid */}
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 mt-8">
+        {/* Logos Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {loading ? (
             // Loading state
@@ -168,14 +84,45 @@ const CategoryPage: NextPage<CategoryPageProps> = ({ categorySlug }) => {
           ) : logos.length > 0 ? (
             // Actual logos
             logos.map((logo) => (
-              <LogoCard key={logo.id} logo={logo} />
+              <div key={logo.id} className="card group animate-fade-in h-full relative overflow-hidden rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
+                {/* Logo Image */}
+                <div className="h-32 sm:h-40 p-3 sm:p-4 flex items-center justify-center bg-gray-50 border-b">
+                  <div className="h-full w-full flex items-center justify-center">
+                    <img
+                      src={logo.pngUrl}
+                      alt={`${logo.name} logo`}
+                      className="max-h-full max-w-full object-contain p-2"
+                    />
+                  </div>
+                </div>
+                
+                {/* Logo Info */}
+                <div className="p-3 sm:p-4">
+                  <h3 className="font-medium text-gray-900 text-center text-sm sm:text-base">{logo.name}</h3>
+                  <p className="text-sm text-gray-500 text-center mt-1">{logo.category}</p>
+                  
+                  {/* Actions */}
+                  <div className="mt-4 flex justify-center">
+                    <Link href={`/logo/${logo.id}`}>
+                      <button className="btn btn-outline text-xs sm:text-sm flex items-center justify-center py-1 sm:py-2 w-full">
+                        View Details
+                      </button>
+                    </Link>
+                  </div>
+                </div>
+              </div>
             ))
           ) : (
             // No logos found
             <div className="col-span-full text-center py-12">
               <p className="text-gray-500 text-lg">
-                No logos found for this category. Check back later!
+                No logos found for this category.
               </p>
+              <Link href="/upload">
+                <button className="mt-4 px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors">
+                  Upload Logo
+                </button>
+              </Link>
             </div>
           )}
         </div>
@@ -187,11 +134,37 @@ const CategoryPage: NextPage<CategoryPageProps> = ({ categorySlug }) => {
 export const getServerSideProps: GetServerSideProps = async ({ params }) => {
   const categorySlug = params?.slug as string;
   
-  return {
-    props: {
-      categorySlug,
-    },
-  };
+  try {
+    // Convert slug to category name (e.g., 'social-media' to 'Social Media')
+    const categoryName = categorySlug
+      .split('-')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+    
+    // Fetch logos for this category
+    const logos = await getLogosByCategory(categoryName);
+    const formattedLogos = logos.map(convertLogoFormat);
+    
+    return {
+      props: {
+        categorySlug,
+        categoryName,
+        initialLogos: formattedLogos,
+      },
+    };
+  } catch (error) {
+    console.error(`Error fetching logos for category ${categorySlug}:`, error);
+    return {
+      props: {
+        categorySlug,
+        categoryName: categorySlug
+          .split('-')
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' '),
+        initialLogos: [],
+      },
+    };
+  }
 };
 
 export default CategoryPage;

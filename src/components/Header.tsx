@@ -1,21 +1,29 @@
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { useSupabaseClient, useUser, useSession } from '@supabase/auth-helpers-react';
 import { MagnifyingGlassIcon, UserIcon, Bars3Icon } from '@heroicons/react/24/outline';
 import { Popover, Transition } from '@headlessui/react';
 import { Fragment } from 'react';
 
-const Header = ({ toggleSidebar }: { toggleSidebar: () => void }) => {
+const Header = ({ toggleSidebar }: { toggleSidebar?: () => void }) => {
   const supabaseClient = useSupabaseClient();
   const user = useUser();
   const session = useSession();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFormat, setSelectedFormat] = useState('all');
 
+  const router = useRouter();
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    // Implement search functionality
-    console.log(`Searching for: ${searchQuery} in format: ${selectedFormat}`);
+    router.push({
+      pathname: '/logos',
+      query: { 
+        search: searchQuery,
+        format: selectedFormat !== 'all' ? selectedFormat : undefined
+      }
+    });
   };
 
   const handleSignOut = async () => {
@@ -23,13 +31,13 @@ const Header = ({ toggleSidebar }: { toggleSidebar: () => void }) => {
   };
 
   return (
-    <header className="bg-white border-b border-gray-200">
+    <header className="bg-white border-b border-gray-200 sticky top-0 z-30 shadow-sm">
       <div className="max-w-7xl mx-auto px-0 sm:px-0 lg:px-0">
         <div className="flex justify-between h-16 items-center gap-2 px-4 w-full">
           {/* Mobile Hamburger Menu */}
           <div className="flex-shrink-0 sm:hidden">
             <button 
-              onClick={toggleSidebar}
+              onClick={() => toggleSidebar && toggleSidebar()}
               className="sidebar-toggle p-2 rounded-md hover:bg-gray-100 focus:outline-none"
             >
               <Bars3Icon className="h-6 w-6 text-gray-600" />
@@ -88,9 +96,9 @@ const Header = ({ toggleSidebar }: { toggleSidebar: () => void }) => {
             </div>
           </div>
           
-          {/* Auth Buttons */}
-          <div className="ml-4 flex items-center">
-            {user ? (
+          {/* User menu - Only shown when logged in */}
+          {user && (
+            <div className="ml-4 flex items-center">
               <Popover className="relative">
                 <Popover.Button className="flex items-center text-sm font-medium text-gray-700 hover:text-gray-900 focus:outline-none">
                   <UserIcon className="h-6 w-6 text-gray-600" />
@@ -108,8 +116,17 @@ const Header = ({ toggleSidebar }: { toggleSidebar: () => void }) => {
                     <div className="px-4 py-2 text-sm text-gray-700 border-b">
                       {user.email}
                     </div>
-                    <Link href="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                      Profile
+                    <Link 
+                      href="/admin/logos" 
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      Admin Dashboard
+                    </Link>
+                    <Link 
+                      href="/upload" 
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      Upload Logo
                     </Link>
                     <button
                       onClick={handleSignOut}
@@ -120,18 +137,8 @@ const Header = ({ toggleSidebar }: { toggleSidebar: () => void }) => {
                   </Popover.Panel>
                 </Transition>
               </Popover>
-            ) : (
-              <div className="space-x-2">
-                <Link href="/auth/signin" className="btn btn-outline hidden sm:inline-block">
-                  Sign in
-                </Link>
-                <Link href="/auth/signup" className="btn btn-primary sm:inline-block">
-                  <span className="hidden sm:inline">Sign up</span>
-                  <span className="sm:hidden">Sign in</span>
-                </Link>
-              </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
     </header>

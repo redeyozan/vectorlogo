@@ -56,8 +56,8 @@ const Layout = ({ children, title = 'VectorLogo - Download Company Logos' }: Lay
             <div className="fixed inset-0 bg-gray-600 bg-opacity-75 z-10 sm:hidden" />
           )}
           
-          {/* Sidebar for mobile (absolute positioned) */}
-          <div className={`sidebar fixed inset-y-0 left-0 z-20 transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-300 ease-in-out sm:hidden`}>
+          {/* Sidebar for mobile (fixed positioned) */}
+          <div className={`sidebar fixed inset-y-0 left-0 z-40 transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-300 ease-in-out sm:hidden border-r border-gray-200 shadow-sm`}>
             <div className="flex justify-end p-4 bg-white">
               <button 
                 onClick={() => setSidebarOpen(false)}
@@ -69,13 +69,15 @@ const Layout = ({ children, title = 'VectorLogo - Download Company Logos' }: Lay
             <Sidebar />
           </div>
           
-          {/* Sidebar for desktop (static positioned) */}
-          <div className="hidden sm:block">
+          {/* Sidebar for desktop (static positioned with sticky) */}
+          <div className="hidden sm:block sticky top-0 h-screen border-r border-gray-200 shadow-sm">
             <Sidebar />
           </div>
           
           <div className="flex flex-col flex-1 overflow-hidden">
-            <Header toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
+            <div className="sticky top-0 z-30">
+              <Header toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
+            </div>
             <main className="flex-1 p-4 sm:p-6 bg-white overflow-y-auto">
               {children}
             </main>
